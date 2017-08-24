@@ -71,7 +71,7 @@ public class Captura{
 
 		}//for
 
-		PcapIf device = alldevs.get(0); // We know we have atleast 1 device
+		PcapIf device = alldevs.get(2); // We know we have atleast 1 device
 		System.out
 		    .printf("\nChoosing '%s' on your behalf:\n",
 		        (device.getDescription() != null) ? device.getDescription()
@@ -128,7 +128,7 @@ public class Captura{
                                 if(i%16==15)
                                     System.out.println("");
                                 }
-                                System.out.println("\n\nEncabezado: "+ packet.toHexdump());
+                                System.out.println("\n\nEncabezado: \n"+ packet.toHexdump());
       
 
 			}
