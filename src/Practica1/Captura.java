@@ -121,7 +121,7 @@ public class Captura{
 				    packet.getCaptureHeader().caplen(),  // Length actually captured
 				    packet.getCaptureHeader().wirelen(), // Original length
 				    user                                 // User supplied object
-				    );
+				    );//
                                 /******Desencapsulado********/
                                 for(int i=0;i<packet.size();i++){
                                 System.out.printf("%02X ",packet.getUByte(i));
