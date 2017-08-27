@@ -136,22 +136,37 @@ public class Captura{
                                 
                                 /* aqui capturo desde el byte 14 al 34, ya que son los 20
                                     bytes de longitud de una trama TCP*/
-                                byte[] paquete=new byte[20];
-                                int j=0;
+                                byte[] paquete1=new byte[20],paquete2=new byte[20];
+                                int j=0,k=0;
 
+                                
+                                /******* Excluyendo los bytes del checksum, para saber si
+                                 esta bien su valor ************/
                                 for(int i=14;i<34;i++){
-                                    paquete[j]=(byte)packet.getUByte(i);
+                                    paquete1[j]=(byte)packet.getUByte(i);
                                     if(i==24||i==25){
-                                        paquete[j]=(byte) 0x00;
+                                        paquete1[j]=(byte) 0x00;
                                     }
                                     j++;
                                 }
                                 
+                                 /*  Mandamos la cadena de bytes al metodo checksum y debe
+                                    dar como resultado el checksum en la trama*/            
+                                long resultado1 = Checksum.calculateChecksum(paquete1);
+                                System.out.printf("Valor del checksum: %02X\n",resultado1);
                                 
-                                /*  Mandamos la cadena de bytes al metodo checksum y debe
-                                    dar como resultado FFFF*/            
-                                long resultado = Checksum.calculateChecksum(paquete);
-                                System.out.printf("Valor del checksum: %02X\n",resultado);
+                                
+                                /******* Excluyendo los bytes del checksum, para saber si
+                                 esta bien su valor ************/
+                                for(int i=14;i<34;i++){
+                                    paquete2[k]=(byte)packet.getUByte(i);
+                                    k++;
+                                }
+                                
+                                long resultado2 = Checksum.calculateChecksum(paquete2);
+                                System.out.printf("Resultado considerando al checksum: %02X\n",resultado2);
+                                
+                                
 			}
 		};
 
