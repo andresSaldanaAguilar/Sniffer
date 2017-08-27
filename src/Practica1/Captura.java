@@ -138,10 +138,16 @@ public class Captura{
                                     bytes de longitud de una trama TCP*/
                                 byte[] paquete=new byte[20];
                                 int j=0;
-                                for(int i=14;i==34;i++){
+
+                                for(int i=14;i<34;i++){
                                     paquete[j]=(byte)packet.getUByte(i);
+                                    if(i==24||i==25){
+                                        paquete[j]=(byte) 0x00;
+                                    }
                                     j++;
                                 }
+                                
+                                
                                 /*  Mandamos la cadena de bytes al metodo checksum y debe
                                     dar como resultado FFFF*/            
                                 long resultado = Checksum.calculateChecksum(paquete);
