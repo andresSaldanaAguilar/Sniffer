@@ -17,7 +17,7 @@ public class Checksum {
    * @return The checksum
    */
   public static long calculateChecksum(byte[] buf) {
-    int length = buf.length;
+    int length = buf.length; //numero de bytes
     int i = 0;
 
     long sum = 0;
@@ -33,7 +33,6 @@ public class Checksum {
         sum = sum & 0xFFFF;
         sum += 1;
       }
-
       i += 2;
       length -= 2;
     }
@@ -56,8 +55,7 @@ public class Checksum {
 
   }
   
-  public static void main(String[] args){
-      
+  public static void main(String[] args){    
       
       byte[] buf = {(byte) 0x45,(byte) 0x00,(byte) 0x00, (byte) 0x3c, (byte) 0x0a, (byte) 0x1c, (byte) 0x40, (byte) 0x00,(byte) 0xff, (byte)0x06, (byte)0x00, (byte) 0x00, (byte)0xa8, (byte)0xb0, (byte) 0x03, (byte) 0x19, (byte) 0xa8, (byte) 0xb0, (byte) 0x03, (byte) 0x6c};
       long resultado = Checksum.calculateChecksum(buf);

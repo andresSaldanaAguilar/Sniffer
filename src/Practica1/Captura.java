@@ -128,9 +128,24 @@ public class Captura{
                                 if(i%16==15)
                                     System.out.println("");
                                 }
+                                
                                 System.out.println("\n\nEncabezado: \n"+ packet.toHexdump());
-      
-
+                                
+                                /*********** Verificando checksum de TCP ************/
+                                
+                                
+                                /* aqui capturo desde el byte 14 al 34, ya que son los 20
+                                    bytes de longitud de una trama TCP*/
+                                byte[] paquete=new byte[20];
+                                int j=0;
+                                for(int i=14;i==34;i++){
+                                    paquete[j]=(byte)packet.getUByte(i);
+                                    j++;
+                                }
+                                /*  Mandamos la cadena de bytes al metodo checksum y debe
+                                    dar como resultado FFFF*/            
+                                long resultado = Checksum.calculateChecksum(paquete);
+                                System.out.printf("Valor del checksum: %02X\n",resultado);
 			}
 		};
 
