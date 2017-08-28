@@ -136,6 +136,7 @@ public class Captura{
                                 
                                 /* aqui capturo desde el byte 14 al 34, ya que son los 20
                                     bytes de longitud de una trama TCP*/
+<<<<<<< HEAD
                                 byte[] paquete1=new byte[20],paquete2=new byte[20];
                                 int j=0,k=0;
 
@@ -144,10 +145,24 @@ public class Captura{
                                  esta bien su valor ************/
                                 for(int i=14;i<34;i++){
                                     paquete1[j]=(byte)packet.getUByte(i);
+=======
+                                byte[] paquete=new byte[50];
+                                int j=0;
+                                int tipo;
+                                tipo=packet.getUByte(12)<<8 | packet.getUByte(13);
+                                    if(tipo==0x86DD){
+                                 System.out.println(" Es tipo IPV6");
+                                    }
+                                    if(tipo==0x0800){
+                                 System.out.println(" Es tipo IPV4");
+                                  for(int i=14;i<34;i++){
+                                    paquete[j]=(byte)packet.getUByte(i);
+>>>>>>> origin/master
                                     if(i==24||i==25){
                                         paquete1[j]=(byte) 0x00;
                                     }
                                     j++;
+<<<<<<< HEAD
                                 }
                                 
                                  /*  Mandamos la cadena de bytes al metodo checksum y debe
@@ -167,6 +182,40 @@ public class Captura{
                                 System.out.printf("Resultado considerando al checksum: %02X\n",resultado2);
                                 
                                 
+=======
+                                }/*  Mandamos la cadena de bytes al metodo checksum y debe
+                                    dar como resultado FFFF*/            
+                                long resultado = Checksum.calculateChecksum(paquete);
+                                System.out.printf("Valor del checksum: %02X\n",resultado);
+                                    }
+                                    if(tipo==0x876B){//tcp
+                                 System.out.println(" Es tipo tcp/ip");
+                                  for(int i=14;i<34;i++){
+                                    paquete[j]=(byte)packet.getUByte(i);
+                                    if(i==30||i==31){
+                                        paquete[j]=(byte) 0x00;
+                                    }
+                                    j++;
+                                }/*  Mandamos la cadena de bytes al metodo checksum y debe
+                                    dar como resultado FFFF*/            
+                                long resultado = Checksum.calculateChecksum(paquete);
+                                System.out.printf("Valor del checksum: %02X\n",resultado);
+                                    }
+                                    if(tipo==0x876B){//UDP Cambiar 
+                                 System.out.println(" Es tipo UDP");
+                                  for(int i=14;i<22;i++){
+                                    paquete[j]=(byte)packet.getUByte(i);
+                                    if(i==7||i==8){
+                                        paquete[j]=(byte) 0x00;
+                                    }
+                                    j++;
+                                }/*  Mandamos la cadena de bytes al metodo checksum y debe
+                                    dar como resultado FFFF*/            
+                                long resultado = Checksum.calculateChecksum(paquete);
+                                System.out.printf("Valor del checksum: %02X\n",resultado);
+                                    }
+                                        
+>>>>>>> origin/master
 			}
 		};
 
