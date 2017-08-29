@@ -22,12 +22,18 @@ import org.jnetpcap.protocol.lan.IEEE802dot3;
 
 public class Captura{
 
-	/**
+
+    public void check(){
+
+    }
+    
+    /**
 	 * Main startup method
 	 *
 	 * @param args
 	 *          ignored
 	 */
+    
    private static String asString(final byte[] mac) {
     final StringBuilder buf = new StringBuilder();
     for (byte b : mac) {
@@ -131,94 +137,69 @@ public class Captura{
                                 
                                 System.out.println("\n\nEncabezado: \n"+ packet.toHexdump());
                                 
-                                /*********** Verificando checksum de TCP ************/
-                                
-                                
-                                /* aqui capturo desde el byte 14 al 34, ya que son los 20
-                                    bytes de longitud de una trama TCP*/
-<<<<<<< HEAD
-                                byte[] paquete1=new byte[20],paquete2=new byte[20];
-                                int j=0,k=0;
+                                /*********** Verificando checksum ************/                        
 
-                                
-                                /******* Excluyendo los bytes del checksum, para saber si
-                                 esta bien su valor ************/
-                                for(int i=14;i<34;i++){
-                                    paquete1[j]=(byte)packet.getUByte(i);
-=======
-                                byte[] paquete=new byte[50];
-                                int j=0;
+                                byte[] paqueteIP=new byte[50],paquete=new byte[50];
+                                int j=0,k=0;
                                 int tipo;
                                 tipo=packet.getUByte(12)<<8 | packet.getUByte(13);
+                                    //IPV6
                                     if(tipo==0x86DD){
-                                 System.out.println(" Es tipo IPV6");
+                                        System.out.println(" Es tipo IPV6, no tiene checksum.");
                                     }
-                                    if(tipo==0x0800){
-                                 System.out.println(" Es tipo IPV4");
-                                  for(int i=14;i<34;i++){
-                                    paquete[j]=(byte)packet.getUByte(i);
->>>>>>> origin/master
-                                    if(i==24||i==25){
-                                        paquete1[j]=(byte) 0x00;
+                                    //IV4
+                                    else if(tipo==0x0800){
+                                        System.out.println(" Es tipo IPV4");
+                                        /* aqui capturo desde el byte 14 al 34, ya que son los 20
+                                        bytes de longitud de una trama IP*/
+                                         for(int i=14;i<34;i++){
+                                           paqueteIP[j]=(byte)packet.getUByte(i);
+                                           if(i==24||i==25){
+                                               paqueteIP[j]=(byte) 0x00;
+                                           }
+                                           j++;
                                     }
-                                    j++;
-<<<<<<< HEAD
-                                }
-                                
-                                 /*  Mandamos la cadena de bytes al metodo checksum y debe
-                                    dar como resultado el checksum en la trama*/            
-                                long resultado1 = Checksum.calculateChecksum(paquete1);
-                                System.out.printf("Valor del checksum: %02X\n",resultado1);
-                                
-                                
-                                /******* Excluyendo los bytes del checksum, para saber si
-                                 esta bien su valor ************/
-                                for(int i=14;i<34;i++){
-                                    paquete2[k]=(byte)packet.getUByte(i);
-                                    k++;
-                                }
-                                
-                                long resultado2 = Checksum.calculateChecksum(paquete2);
-                                System.out.printf("Resultado considerando al checksum: %02X\n",resultado2);
-                                
-                                
-=======
-                                }/*  Mandamos la cadena de bytes al metodo checksum y debe
-                                    dar como resultado FFFF*/            
-                                long resultado = Checksum.calculateChecksum(paquete);
-                                System.out.printf("Valor del checksum: %02X\n",resultado);
+                                        /*  Mandamos la cadena de bytes al metodo checksum y debe
+                                            dar como resultado el checksum*/            
+                                        long resultadoIP = Checksum.calculateChecksum(paqueteIP);
+                                        System.out.printf("Valor del checksum: %02X\n",resultadoIP);
                                     }
-                                    if(tipo==0x876B){//tcp
-                                 System.out.println(" Es tipo tcp/ip");
-                                  for(int i=14;i<34;i++){
-                                    paquete[j]=(byte)packet.getUByte(i);
-                                    if(i==30||i==31){
-                                        paquete[j]=(byte) 0x00;
-                                    }
-                                    j++;
-                                }/*  Mandamos la cadena de bytes al metodo checksum y debe
-                                    dar como resultado FFFF*/            
-                                long resultado = Checksum.calculateChecksum(paquete);
-                                System.out.printf("Valor del checksum: %02X\n",resultado);
-                                    }
-                                    if(tipo==0x876B){//UDP Cambiar 
-                                 System.out.println(" Es tipo UDP");
-                                  for(int i=14;i<22;i++){
-                                    paquete[j]=(byte)packet.getUByte(i);
-                                    if(i==7||i==8){
-                                        paquete[j]=(byte) 0x00;
-                                    }
-                                    j++;
-                                }/*  Mandamos la cadena de bytes al metodo checksum y debe
-                                    dar como resultado FFFF*/            
-                                long resultado = Checksum.calculateChecksum(paquete);
-                                System.out.printf("Valor del checksum: %02X\n",resultado);
-                                    }
-                                        
->>>>>>> origin/master
+                                    
+                                    
+                                    /*ahora checamos el valor del checksum de TCP o UDP*/
+                                    
+                                    //TCP
+                                    if((byte)packet.getUByte(23)==0x06){//tcp
+                                        System.out.println("Es tipo tcp/ip");
+                                         for(int i=34;i<54;i++){
+                                           paquete[k]=(byte)packet.getUByte(i);
+                                           if(i==44||i==45){
+                                               paquete[k]=(byte) 0x00;
+                                           }
+                                           System.out.printf("%02X\n",paquete[k]);
+                                           k++;
+                                       }/*  Mandamos la cadena de bytes al metodo checksum y debe
+                                           dar como resultado el checksum*/            
+                                       long resultado = Checksum.calculateChecksum(paquete);
+                                       System.out.printf("Valor del checksum (TCP): %02X\n",resultado);                                      
+                                    } 
+                                    //UDP
+                                    else if((byte)packet.getUByte(23)==0x11){//UDP 
+                                        System.out.println("Es tipo UDP");
+                                         for(int i=34;i<42;i++){
+                                           paquete[k]=(byte)packet.getUByte(i);
+                                           if(i==40||i==41){
+                                               paquete[k]=(byte) 0x00;
+                                           }
+                                           System.out.printf("%02X\n",paquete[k]);
+                                           k++;
+                                       }/*  Mandamos la cadena de bytes al metodo checksum y debe
+                                           dar como resultado el checksum*/            
+                                       long resultado = Checksum.calculateChecksum(paquete);
+                                       System.out.printf("Valor del checksum (UDP): %02X\n",resultado);
+                                    }                                     
 			}
 		};
-
 
 		/***************************************************************************
 		 * Fourth we enter the loop and tell it to capture 10 packets. The loop
@@ -228,7 +209,7 @@ public class Captura{
 		 * the loop method exists that allows the programmer to sepecify exactly
 		 * which protocol ID to use as the data link type for this pcap interface.
 		 **************************************************************************/
-		pcap.loop(10, jpacketHandler, "jNetPcap rocks!");
+		pcap.loop(1, jpacketHandler,"\nPaquete capturado:");
 
 		/***************************************************************************
 		 * Last thing to do is close the pcap handle
