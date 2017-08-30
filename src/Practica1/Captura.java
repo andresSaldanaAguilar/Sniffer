@@ -139,7 +139,9 @@ public class Captura{
                                 
                                 /*********** Verificando checksum ************/                        
 
-                                byte[] paqueteIP=new byte[50],paquete=new byte[50];
+                                byte checksum[]={(byte)packet.getUByte(24),(byte)packet.getUByte(25)};
+                                
+                                byte[] paqueteIP=new byte[50];
                                 int j=0,k=0;
                                 int tipo;
                                 tipo=packet.getUByte(12)<<8 | packet.getUByte(13);
@@ -152,13 +154,13 @@ public class Captura{
                                         System.out.println(" Es tipo IPV4");
                                         /* aqui capturo desde el byte 14 al 34, ya que son los 20
                                         bytes de longitud de una trama IP*/
-                                         for(int i=14;i<34;i++){
-                                           paqueteIP[j]=(byte)packet.getUByte(i);
-                                           if(i==24||i==25){
-                                               paqueteIP[j]=(byte) 0x00;
-                                           }
-                                           j++;
-                                    }
+                                        for(int i=14;i<34;i++){
+                                            paqueteIP[j]=(byte)packet.getUByte(i);
+                                            if(i==24||i==25){
+                                                paqueteIP[j]=(byte) 0x00;
+                                            }
+                                            j++;
+                                        }
                                         /*  Mandamos la cadena de bytes al metodo checksum y debe
                                             dar como resultado el checksum*/            
                                         long resultadoIP = Checksum.calculateChecksum(paqueteIP);
@@ -168,36 +170,59 @@ public class Captura{
                                     
                                     /*ahora checamos el valor del checksum de TCP o UDP*/
                                     
-                                    //TCP
-                                    if((byte)packet.getUByte(23)==0x06){//tcp
-                                        System.out.println("Es tipo tcp/ip");
-                                         for(int i=34;i<54;i++){
-                                           paquete[k]=(byte)packet.getUByte(i);
-                                           if(i==44||i==45){
-                                               paquete[k]=(byte) 0x00;
+                                    //validamos el IHL del encabezado
+                                    
+                                    
+                                    //caso de valor de 20 bytes de ip (4500)
+                                    if((byte)packet.getUByte(14)==69){
+                                        //encuentro cual es la longitud
+                                        int longitudRelativa=packet.getUByte(16)+packet.getUByte(17);
+                                        System.out.println("Longitud relativa: "+longitudRelativa);
+                                        
+                                        
+                                        //TCP
+                                        if((byte)packet.getUByte(23)==0x06){
+                                            //encuentro la longitud real restando IHL - longitud
+                                            int longitudReal=longitudRelativa-20;
+                                            System.out.println("Longitud real: "+longitudReal);
+                                            byte[] paquete=new byte[longitudReal];
+                                            
+                                            System.out.println("Es tipo tcp/ip");
+                                            for(int i=34;i<34+longitudReal;i++){
+                                                 paquete[k]=(byte)packet.getUByte(i);
+                                                 System.out.printf("%02X",paquete[k]);
+                                                 k++;
+                                            }
+                                            /*  Mandamos la cadena de bytes al metodo checksum y debe
+                                               dar como resultado el checksum*/            
+                                            long resultado = Checksum.calculateChecksum(paquete);
+                                            System.out.printf("Valor del checksum (TCP): %02X\n",resultado);                                      
+                                        } 
+                                        
+                                        //UDP
+                                        else if((byte)packet.getUByte(23)==0x11){
+                                            //encuentro la longitud real restando IHL - longitud
+                                            int longitudReal=longitudRelativa-8;
+                                            System.out.println("Longitud real: "+longitudReal);
+                                            byte[] paquete=new byte[longitudReal];
+                                            
+                                            System.out.println("Es tipo UDP");
+                                             for(int i=34;i<34+longitudReal;i++){
+                                               paquete[k]=(byte)packet.getUByte(i);
+                                               System.out.printf("%02X",paquete[k]);
+                                               k++;
                                            }
-                                           System.out.printf("%02X\n",paquete[k]);
-                                           k++;
-                                       }/*  Mandamos la cadena de bytes al metodo checksum y debe
-                                           dar como resultado el checksum*/            
-                                       long resultado = Checksum.calculateChecksum(paquete);
-                                       System.out.printf("Valor del checksum (TCP): %02X\n",resultado);                                      
-                                    } 
-                                    //UDP
-                                    else if((byte)packet.getUByte(23)==0x11){//UDP 
-                                        System.out.println("Es tipo UDP");
-                                         for(int i=34;i<42;i++){
-                                           paquete[k]=(byte)packet.getUByte(i);
-                                           if(i==40||i==41){
-                                               paquete[k]=(byte) 0x00;
-                                           }
-                                           System.out.printf("%02X\n",paquete[k]);
-                                           k++;
-                                       }/*  Mandamos la cadena de bytes al metodo checksum y debe
-                                           dar como resultado el checksum*/            
-                                       long resultado = Checksum.calculateChecksum(paquete);
-                                       System.out.printf("Valor del checksum (UDP): %02X\n",resultado);
-                                    }                                     
+                                            /*  Mandamos la cadena de bytes al metodo checksum y debe
+                                               dar como resultado el checksum*/            
+                                            long resultado = Checksum.calculateChecksum(paquete);
+                                            System.out.printf("Valor del checksum (UDP): %02X\n",resultado);
+                                        }       
+                                    }
+                                    else{
+                                        System.out.println("Proximamente mas validaciones XD");
+                                    }
+                                    
+                                    
 			}
 		};
 
