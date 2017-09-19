@@ -158,19 +158,7 @@ public class Captura {
                                 
                                 int longitud = (packet.getUByte(12)*256)+packet.getUByte(13);
                                 System.out.printf("\nLongitud: %d (%04X)",longitud,longitud );
-                                if(longitud<1500){
-                                    /* LA TRAMA ES IEEE*/
-                                    System.out.println("--->Trama IEEE802.3");
-                                    System.out.printf(" |-->MAC Destino: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(0),packet.getUByte(1),packet.getUByte(2),packet.getUByte(3),packet.getUByte(4),packet.getUByte(5));
-                                    System.out.printf("\n |-->MAC Origen: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(6),packet.getUByte(7),packet.getUByte(8),packet.getUByte(9),packet.getUByte(10),packet.getUByte(11));
-                                    System.out.printf("\n |-->DSAP: %02X",packet.getUByte(14));
-                                    int ssap = packet.getUByte(15)& 0x00000001;
-                                    String c_r = (ssap==1)?"Respuesta":(ssap==0)?"Comando":"Otro";
-                                    System.out.printf("\n |-->SSAP: %02X   %s",packet.getUByte(15), c_r);
-                                    
-                                    if(longitud==3){
-                                        
-                                        String s1=String.format("%8s", Integer.toBinaryString((byte)(packet.getUByte(16))& 0xFF)).replace(' ', '0');
+                                String s1=String.format("%8s", Integer.toBinaryString((byte)(packet.getUByte(16))& 0xFF)).replace(' ', '0');
                                         String s2=String.format("%8s", Integer.toBinaryString((byte)(packet.getUByte(17))& 0xFF)).replace(' ', '0');
                                         System.out.println("\nTipo de trama"+s1+"|"+s2);
                                         String tipoTrama1="",tipoTrama2="";
@@ -180,26 +168,145 @@ public class Captura {
                                         for(int i=s2.length()-1;i>=0;i--){
                                             tipoTrama2=tipoTrama2+s2.charAt(i);
                                         }
+                                if(longitud<1500){
+                                    /* LA TRAMA ES IEEE*/
+                                    System.out.println("--->Trama IEEE802.3");
+                                    System.out.printf(" |-->MAC Destino: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(0),packet.getUByte(1),packet.getUByte(2),packet.getUByte(3),packet.getUByte(4),packet.getUByte(5));
+                                    System.out.printf("\n |-->MAC Origen: %02X:%02X:%02X:%02X:%02X:%02X",packet.getUByte(6),packet.getUByte(7),packet.getUByte(8),packet.getUByte(9),packet.getUByte(10),packet.getUByte(11));
+                                    System.out.printf("\n |-->DSAP: %02X",packet.getUByte(14));
+                                    int ssap = packet.getUByte(15)& 0x00000001;
+                                    String c_r = (ssap==1)?"Respuesta":(ssap==0)?"Comando":"Otro";
+                                    System.out.printf("\n |-->SSAP: %02X   %s\n",packet.getUByte(15), c_r);
+                                                                          
+                                       /* String s1=String.format("%8s", Integer.toBinaryString((byte)(packet.getUByte(16))& 0xFF)).replace(' ', '0');
+                                        String s2=String.format("%8s", Integer.toBinaryString((byte)(packet.getUByte(17))& 0xFF)).replace(' ', '0');
+                                        System.out.println("\nTipo de trama"+s1+"|"+s2);
+                                        String tipoTrama1="",tipoTrama2="";
+                                        for(int i=s1.length()-1;i>=0;i--){
+                                            tipoTrama1=tipoTrama1+s1.charAt(i);
+                                        }
+                                        for(int i=s2.length()-1;i>=0;i--){
+                                            tipoTrama2=tipoTrama2+s2.charAt(i);
+                                        } */
                                         
                                         System.out.println("invertida:"+tipoTrama1+"|"+tipoTrama2);
-                                        
-                                        
-                                    }
-                                    else{
-                                        
-                                    }
-                                    
-                                    
-                                    
-                                } else if(longitud>=1500){
+
+                                if(longitud==3){
+                                    if(tipoTrama1.charAt(0)=='0'){
+                                        System.out.println("Es una trama I");
+                                    }else if(tipoTrama1.charAt(0)=='1' && tipoTrama1.charAt(1)=='0'){
+                                        System.out.println("Es una trama S");
+                                        int cod = Integer.parseInt("" + tipoTrama1.charAt(2) + tipoTrama1.charAt(3));
+                              switch (cod){
+                                  case 0: 
+                                        System.out.println("RR -Listo para recibir-");
+                                         break;
+                                  case 1: 
+                                      System.out.println("REI -Rechazado-");
+                                      break;
+                                  case 10:
+                                      System.out.println("RNR -No Listo para Recibir");
+                                      break;
+                                  case 11: 
+                                      System.out.println("SREI -Rechazo Selecctivo");
+                                      break;
+                              }
+                                    } else{
+                                        System.out.println("Es una trama U");
+                                        int bit = Integer.parseInt("" + tipoTrama1.charAt(2) + tipoTrama1.charAt(3) + tipoTrama1.charAt(5) + tipoTrama1.charAt(6) + tipoTrama1.charAt(7));
+                                        switch(bit){
+                                            case 1:
+                                                System.out.println("SNRM");
+                                                break;
+                                            case 11011: 
+                                                System.out.println("SNRME");
+                                                break;
+                                            case 11000:
+                                                if(ssap == 0)
+                                                System.out.println("SARM");
+                                                if(ssap == 1)
+                                                    System.out.println("DM");
+                                                break;
+                                            case 11010: 
+                                                System.out.println("SARME");
+                                                break;
+                                            case 11100: 
+                                                System.out.println("SABM");
+                                                break;
+                                            case 11110: 
+                                                System.out.println("SABME");
+                                                break;
+                                            case 0:
+                                                if(ssap == 0)
+                                                System.out.println("UI");
+                                                if(ssap == 1)
+                                                    System.out.println("UI");
+                                                break;
+                                            case 110:
+                                                System.out.println("UA");
+                                                break;
+                                            case 10: 
+                                                if(ssap == 0)
+                                                System.out.println("DISC");
+                                                if(ssap == 1)
+                                                    System.out.println("RD");
+                                                break;
+                                            case 10000: 
+                                                if(ssap == 0)
+                                                System.out.println("SIM");
+                                                if(ssap == 1)
+                                                    System.out.println("RIM");
+                                                break;
+                                            case 100: 
+                                                System.out.println("UP");
+                                                break;
+                                            case 11001:
+                                                System.out.println("RSET");
+                                                break;
+                                            case 11101:
+                                                if(ssap == 0)
+                                                System.out.println("XID");
+                                                if(ssap == 1)
+                                                    System.out.println("XID");
+                                                break;
+                                        }
+                                    }                                  
+                                } else{
+                                     String trama=tipoTrama1+tipoTrama2;
+                                     if(trama.charAt(0)=='1'){
+                                         System.out.println("Trama S Longitud 2");
+                                         int cod = Integer.parseInt("" + tipoTrama1.charAt(2) + tipoTrama1.charAt(3));
+                              switch (cod){
+                                  case 0: 
+                                        System.out.println("RR -Listo para recibir-");
+                                         break;
+                                  case 1: 
+                                      System.out.println("REI -Rechazado-");
+                                      break;
+                                  case 10:
+                                      System.out.println("RNR -No Listo para Recibir");
+                                      break;
+                                  case 11: 
+                                      System.out.println("SREI -Rechazo Selecctivo");
+                                      break;
+                              }
+                                       }else{ 
+                                        System.out.println("Trama I Longitud 2");
+                                     }
+                                }
+                                }else if(longitud>=1500){
                                     System.out.println("-->Trama ETHERNET");
-                                }//else
+                                    
+                                }
+                                
+                                
+                                  
                                 
                                 
                                 //System.out.println("\n\nEncabezado: "+ packet.toHexdump());
       
 
-			}
+			}       
 		};
 
 
@@ -211,7 +318,7 @@ public class Captura {
 		 * the loop method exists that allows the programmer to sepecify exactly
 		 * which protocol ID to use as the data link type for this pcap interface.
 		 **************************************************************************/
-		pcap.loop(2, jpacketHandler, " ");
+		pcap.loop(-1, jpacketHandler, " ");
 
 		/***************************************************************************
 		 * Last thing to do is close the pcap handle
