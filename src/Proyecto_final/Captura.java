@@ -1,5 +1,6 @@
-package Practica2;
+package Proyecto_final;
 
+import Practica2.*;
 import Practica1.Checksum;
 import java.util.ArrayList;
 import java.util.Date;
