@@ -1,10 +1,14 @@
-package Practica2;
+package Practica3;
 
+import Proyecto_final.*;
+import Practica2.*;
 import Practica1.Checksum;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapAddr;
@@ -158,7 +162,7 @@ public class Captura {
                                 }
                                 
                                 
-                                int longitud = (packet.getUByte(12)*256)+(packet.getUByte(13));
+                                int longitud = (packet.getUByte(12)*256)+packet.getUByte(13);
                                 System.out.printf("\nLongitud: %d (%04X)",longitud,longitud );
                                         
                                 //Checando si es una trama tipo IEEE 802.3
@@ -302,35 +306,23 @@ public class Captura {
                                      }
                                 }
                                 }//la trama es tipo ethernet
-                                else if(longitud>=1500){
-                                    System.out.println("-->Trama ETHERNET");
+                                else if(longitud==5633){
+                                    System.out.println("-->Trama CHIDA :D");
                                     byte checksum[]={(byte)packet.getUByte(24),(byte)packet.getUByte(25)};
                                 
                                 byte[] paqueteIP=new byte[50];
                                 int j=0,k=0;
                                 int tipo;
                                 tipo=packet.getUByte(12)<<8 | packet.getUByte(13);
-                                    //IPV6
-                                    if(tipo==0x86DD){
-                                        System.out.println("Es tipo IPV6, no tiene checksum.");
+                                    try {
+                                        //TRAMA CHIDA
+                                        DataOutputStream dos= new DataOutputStream(new FileOutputStream("resultado.txt"));
+                                        
+                                    
+                                    } catch (FileNotFoundException ex) {
+                                        Logger.getLogger(Captura.class.getName()).log(Level.SEVERE, null, ex);
                                     }
-                                    //IV4
-                                    else if(tipo==0x0800){
-                                        System.out.println("Es tipo IPV4");
-                                        /* aqui capturo desde el byte 14 al 34, ya que son los 20
-                                        bytes de longitud de una trama IP*/
-                                        for(int i=14;i<34;i++){
-                                            paqueteIP[j]=(byte)packet.getUByte(i);
-                                            if(i==24||i==25){
-                                                paqueteIP[j]=(byte) 0x00;
-                                            }
-                                            j++;
-                                        }
-                                        /*  Mandamos la cadena de bytes al metodo checksum y debe
-                                            dar como resultado el checksum*/            
-                                        long resultadoIP = Checksum.calculateChecksum(paqueteIP);
-                                        System.out.printf("Valor del checksum: %02X\n",resultadoIP);
-                                    }
+                                    
                                     
                                     
                                     /*ahora checamos el valor del checksum de TCP o UDP*/
@@ -433,11 +425,12 @@ public class Captura {
                                         
                                         
                                     }
+                                }   
                                     else{
                                         System.out.println("Proximamente mas validaciones XD");
                                     }
                                     
-                                }
+                                
 			}       
 		};
 

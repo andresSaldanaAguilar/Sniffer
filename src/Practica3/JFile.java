@@ -22,8 +22,13 @@ public class JFile {
 
 
 
- byte[] openFile() throws IOException{
-		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+ byte[] readFile() throws IOException{
+    InputStream is = null;
+    int i;
+    char c;
+    byte[] b; 
+      
+        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 		int returnValue = jfc.showOpenDialog(null);
 		// int returnValue = jfc.showSaveDialog(null);
 
@@ -32,25 +37,91 @@ public class JFile {
 			System.out.println(selectedFile.getAbsolutePath());
                         String path = selectedFile.getAbsolutePath();
                         long tamanio = selectedFile.length();
-                        String nombre = selectedFile.getName();
-                    try {
-                        //DataInputStream dis = new DataInputStream(new FileInputStream(path));
+                try {
 
-                        Path fileLocation = Paths.get(path);
-                        byte [] data = Files.readAllBytes(fileLocation);
-                        return data;
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(JFile.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                        // new input stream created
+                        is = new FileInputStream(path);
+                        b= new byte[(int)tamanio];
+
+                        System.out.println("Characters printed:");
+                        long env=0;
+                        // reads till the end of the stream
+                        while(env <tamanio) {
+                            i = is.read(b); //copia al arreglo el contenido del archivo.
+                            env++;
+                                    //is.read(b, offset, len);
+                                    //is.b[],off, len
+                        }
+                        for (int j=0;j<b.length;j++){
+                            System.out.print((char)b[j]);
+                        }                       
+                        return b;
+
+                    } catch(Exception e) {
+
+                         // if any I/O error occurs
+                         e.printStackTrace();
+                      } finally {
+
+                         // releases system resources associated with this stream
+                         if(is!=null)
+                            is.close();
+                   }
+		}
+                return null;
+}
+ 
+ byte[] writeFile(int []b) throws IOException{
+    OutputStream os = null;
+    int i;
+    char c;
+     
+      
+        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		int returnValue = jfc.showOpenDialog(null);
+		// int returnValue = jfc.showSaveDialog(null);
+
+		if (returnValue == JFileChooser.APPROVE_OPTION) {
+			File selectedFile = jfc.getSelectedFile();
+			System.out.println(selectedFile.getAbsolutePath());
+                        String path = selectedFile.getAbsolutePath();
+                        long tamanio = selectedFile.length();
+                try {
+
+                        // new input stream created
+                        os = new FileOutputStream(path);                                              
+                        //os.write(b); //copia al arreglo el contenido del archivo.
+                        
+                        for (int j=0;j<b.length;j++){
+                            System.out.print((char)b[j]);
+                        }                       
+                        //return b;
+
+                    } catch(Exception e) {
+
+                         // if any I/O error occurs
+                         e.printStackTrace();
+                      } finally {
+
+                         // releases system resources associated with this stream
+                         if(os!=null)
+                            os.close();
+                   }
 		}
                 return null;
 }
 
+public static void main(String args[]) throws IOException{
 
+      
+      
+
+}
+ /*
 public static void main(String args[]) throws IOException{
     JFile file=new JFile(); 
     file.openFile();
 }
-
+*/
 
 }

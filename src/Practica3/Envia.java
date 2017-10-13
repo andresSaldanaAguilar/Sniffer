@@ -53,8 +53,8 @@ public class Envia {
                 
                 /*abrimos el filechooser para el mensaje a enviar*/
                 JFile jf=new JFile();
-                byte[] mensaje=jf.openFile();
-                int id=0;
+                byte[] mensaje=jf.readFile();
+                //int id=0;
     
 		int r = Pcap.findAllDevs(alldevs, errbuf);
 		if (r == Pcap.NOT_OK || alldevs.isEmpty()) {
@@ -190,11 +190,12 @@ public class Envia {
     /*agregamos los datos (mensaje) a la trama*/
     int tam=mensaje.length;
     int c;
+        
     if(tam<50){
         for(c=0;c<tam;c++){
-            trama[14+c]=mensaje[c];
+            trama[19+c]=mensaje[c];
         }
-        int indice=c+14;
+        /*int indice=c+14;
         String identificador= (""+id);
         byte[]bufid = identificador.getBytes();
         int tamid = bufid.length;
@@ -202,7 +203,7 @@ public class Envia {
         for(int j=indice;j<indice+tamid;j++){
         trama[j]=bufid[n];
         n++;
-        }
+        }*/
     }
     else{
         System.out.println("El archivo es muy largo..maximo 50 bytes");
