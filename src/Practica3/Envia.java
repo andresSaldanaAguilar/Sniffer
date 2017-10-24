@@ -26,7 +26,7 @@ import org.jnetpcap.PcapSockAddr;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
   
-public class Envia {  
+public class Envia {
     
     private static String asString(final byte[] mac) {
     final StringBuilder buf = new StringBuilder();
@@ -43,6 +43,7 @@ public class Envia {
     return buf.toString();
   }
     
+    
   public static void main(String[] args) throws IOException {  
     List<PcapIf> alldevs = new ArrayList<PcapIf>(); // Will be filled with NICs  
     StringBuilder errbuf = new StringBuilder(); // For any error msgs  
@@ -54,7 +55,9 @@ public class Envia {
                 /*abrimos el filechooser para el mensaje a enviar*/
                 JFile jf=new JFile();
                 byte[] mensaje=jf.readFile();
-                //int id=0;
+                
+                //int identificador=counter.id;
+                ///int id=0;
     
 		int r = Pcap.findAllDevs(alldevs, errbuf);
 		if (r == Pcap.NOT_OK || alldevs.isEmpty()) {
@@ -101,7 +104,7 @@ public class Envia {
        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
        System.out.println("\nElije la interfaz de red:");
        int interfaz = Integer.parseInt(br.readLine());
-    PcapIf device = alldevs.get(interfaz); // We know we have atleast 1 device  
+       PcapIf device = alldevs.get(interfaz); // We know we have atleast 1 device  
        /******************************************************/
         Iterator<PcapAddr> it1 = device.getAddresses().iterator();
         while(it1.hasNext()){
@@ -123,100 +126,16 @@ public class Envia {
        System.out.print("MAC ORIGEN: ");   
        byte[] MACo = device.getHardwareAddress();
        for(int j=0;j<MACo.length;j++)
-    System.out.printf("%02X ",MACo[j]); 
+       System.out.printf("%02X ",MACo[j]); 
         
     /***************************************** 
      * Second we open a network interface 
      *****************************************/  
-    int snaplen = 64 * 1024; // Capture all packets, no trucation  
-    int flags = Pcap.MODE_PROMISCUOUS; // capture all packets  
-    int timeout = 10 * 1000; // 10 seconds in millis  
-    Pcap pcap = Pcap.openLive(device.getName(), snaplen, flags, timeout, errbuf);  
-  
-  
-    /******************************************************* 
-     * Third we create our crude packet we will transmit out 
-     * This creates a broadcast packet 
-     *******************************************************/  
-    byte[] trama = new byte[64];
-   
-    for(int k=0;k<MACo.length;k++){
-        trama[k] = (byte) 0xff;
-        trama[k+6]=MACo[k];
-    }//for
+        int snaplen = 64 * 1024; // Capture all packets, no trucation  
+        int flags = Pcap.MODE_PROMISCUOUS; // capture all packets  
+        int timeout = 10 * 1000; // 10 seconds in millis  
+        Pcap pcap = Pcap.openLive(device.getName(), snaplen, flags, timeout, errbuf);  
 
-//NetworkInterface n = NetworkInterface.getByIndex(3);
-////NetworkInterface n = NetworkInterface.getByName("eth3");
-//System.out.println("iiiiiii: "+device.getDescription());
-//NetworkInterface n = NetworkInterface.getByName(device.getDescription());        
-//Enumeration ee = n.getInetAddresses();
-//InetAddress IPorigen=InetAddress.getByName(ip_interfaz);
-//    while (ee.hasMoreElements())
-//    {
-//        InetAddress ii = (InetAddress) ee.nextElement();
-//        System.out.println("IP: "+ii.getHostAddress());
-//        if(ii instanceof java.net.Inet4Address)
-//            IPorigen = ii;
-//    }
-//    /////////////////////////////////////////////////////
-  
-    trama[12]= (byte) 0x16; //tipo sin asignar
-    trama[13]= (byte) 0x01; //tipo sin asignar rfc 1340 
-//-------------------------------------------------------- 
-    /*String mensaje= "Un breve mensaje";
-    int id=0;
-    String mensaje1= (""+id);
-    byte[]buf = mensaje.getBytes();
-    byte[]buf1 = mensaje1.getBytes();
-    int tam = buf.length;
-    int tam1 = buf1.length;
-    if(tam<50){
-    for(int c=0;c<tam;c++){
-        trama[14+c]=buf[c];
-    }
-    int n=0;
-    for(int c=14+tam;c<14+tam+tam1;c++){
-        trama[c]=buf1[n];
-        n++;
-    }
-    id++;
-    }
-    else
-    {
-        System.out.println("El mensaje es muy largo..maximo 50 bytes");
-        System.exit(1);
-    } */
-//--------------------------------------------------------   
-    /*agregamos los datos (mensaje) a la trama*/
-    int tam=mensaje.length;
-    int c;
-        
-    if(tam<50){
-        for(c=0;c<tam;c++){
-            trama[19+c]=mensaje[c];
-        }
-        /*int indice=c+14;
-        String identificador= (""+id);
-        byte[]bufid = identificador.getBytes();
-        int tamid = bufid.length;
-        int n=0;
-        for(int j=indice;j<indice+tamid;j++){
-        trama[j]=bufid[n];
-        n++;
-        }*/
-    }
-    else{
-        System.out.println("El archivo es muy largo..maximo 50 bytes");
-        System.exit(1);
-    }
-    
-    
-    //Arrays.fill(a, (byte) 0xff);  
-    ByteBuffer b = ByteBuffer.wrap(trama);  
-  
-    
-  
-    
     
     /********F I L T R O********/
             PcapBpfProgram filter = new PcapBpfProgram();
@@ -229,67 +148,151 @@ public class Envia {
             }//if
             pcap.setFilter(filter);
             
-            
+    
+    byte[] trama = new byte[1247];
+   
+    for(int k=0;k<MACo.length;k++){ //mc destino y origen
+        trama[k] = (byte) 0xff;
+        trama[k+6]=MACo[k];
+    }
+  
+    trama[12]= (byte) 0x16; //tipo sin asignar
+    trama[13]= (byte) 0x01; //tipo sin asignar rfc 1340 
+    trama[14]=(byte)2; //destino
+    trama[15]=(byte)1; //origen
+    /*nombre del archivo*/
+    System.out.println("PATH: "+jf.getOriginPath());
+    byte bpath[]=jf.getOriginPath().getBytes();
+    //caso en que el nombre sea mas corto de 20 bytes
+    if(bpath.length < 20){
+        System.out.println("es mini");
+        //variable aux
+        int aux=16;
+        //lenamos con el tamaño del archivp
+        for(int j=0;j<bpath.length;j++){
+            trama[16+j]=bpath[j];
+            aux++;
+        }
+        System.out.println("aux "+aux);
+        for(int j=aux;j<36;j++){
+            trama[j]=(byte)0;     
+        }
+    }
+    /*si es mas largo de 20 bytes*/
+    else{
+        for(int j=0;j<36;j++){
+            trama[16+j]=bpath[j];
+        }
+    }
+    Counter countersec=new Counter(1);
+    Counter counterack=new Counter(0);
+    Counter countermsj=new Counter(0); 
+    
+    byte sec=(byte)countersec.id;
+                                System.out.println("no. sec: "+sec);
+                                trama[36]=sec;
+                                countersec.incrementa(1);
+                                
+                                byte ack=(byte)counterack.id;
+                                System.out.println("no. acuse: "+ack);
+                                trama[37]=ack;
+                                counterack.incrementa(1);
+                                
+                                System.out.println("Tamaño del mensaje:" +mensaje.length);  
+                                //si el mensaje se manda en un solo paquete
+                                if(mensaje.length < 1200){
+                                    //variable aux
+                                    int aux=38;
+                                    //lenamos con el tamaño del archivp
+                                    for(int j=0;j<mensaje.length;j++){
+                                        trama[38+j]=mensaje[j];
+                                        aux++;
+                                        countermsj.incrementa(1);
+                                    }
+                                    System.out.println("aux "+aux);
+                                    for(int j=aux;j<1238;j++){
+                                        trama[j]=(byte)0;     
+                                    }
+                                }
+                                /*si es mas largo de 20 bytes*/
+                                else{
+                                    int aux=38+countermsj.id;
+                                    for(int j=0;j<1238;j++){
+                                        trama[aux]=mensaje[j];
+                                        countermsj.incrementa(1);
+                                    }
+                                    
+                                }
+    pcap.sendPacket(trama);                        
+                                
+    /*********primer mensaje que se envia************/
+    /*agregamos los datos (mensaje) a la trama*/
+    
+    int tam=mensaje.length;
+       System.out.println("el tamanio es:" +tam);                  
     PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
-
 			
         public void nextPacket(PcapPacket packet, String user) {
-                                
-				System.out.printf("Paquete recibido el %s bytes capturados=%-4d tam original=%-4d %s\n",
-				    new Date(packet.getCaptureHeader().timestampInMillis()),
-				    packet.getCaptureHeader().caplen(),  // Length actually captured
-				    packet.getCaptureHeader().wirelen(), // Original length
-				    user                                 // User supplied object
-				    );
-                                /******Desencapsulado********/
-                                System.out.println("MAC destino:");
-                                for(int i=0;i<6;i++){
-                                System.out.printf("%02X ",packet.getUByte(i));
-                                }
-                                System.out.println("");
-                                System.out.println("MAC origen:");
-                                for(int i=6;i<12;i++){
-                                System.out.printf("%02X ",packet.getUByte(i));
-                                }
-                                System.out.println("");
-                                System.out.println("Tipo:");
-                                for(int i=12;i<14;i++){
-                                System.out.printf("%02X ",packet.getUByte(i));
-                                }
-                                int tipo = (packet.getUByte(12)*256)+packet.getUByte(13);
-                                System.out.printf("Tipo= %d",tipo);
-                                if(tipo==5633){ //0x1601
-                                   System.out.println("\n****************Este es mi mensaje que mande\n y los datos del mensaje son:");
-                                   byte[]t = packet.getByteArray(14, 50);
-                                   for(int k=0;k<t.length;k++)
-                                        System.out.printf("%02X ",t[k]);
-                                   String datos = new String(t);
-                                    System.out.println("\n"+datos);
-
-                                for(int l=0;l<packet.size();l++){
-                                System.out.printf("%02X ",packet.getUByte(l));
-                                if(l%16==15)
-                                    System.out.println("");
-                                }
-                                //id++;
-                                
-                                
-
-                                }//if
-                                
-                                //System.out.println("\n\nEncabezado: "+ packet.toHexdump());
-      
-
-			}
+        int tam=mensaje.length;
         
+   
+        /*contruyendo*/                               
+                                byte sec=(byte)countersec.id;
+                                System.out.println("no. sec: "+sec);
+                                trama[36]=sec;
+                                countersec.incrementa(1);
+                                
+                                byte ack=(byte)counterack.id;
+                                System.out.println("no. acuse: "+ack);
+                                trama[37]=ack;
+                                counterack.incrementa(1);
+                                
+                                System.out.println("Tamaño del mensaje:" +mensaje.length);  
+                                //si el mensaje se manda en un solo paquete
+                                if(mensaje.length < 1200){
+                                    //variable aux
+                                    int aux=38;
+                                    //lenamos con el tamaño del archivp
+                                    for(int j=0;j<mensaje.length;j++){
+                                        trama[38+j]=mensaje[j];
+                                        aux++;
+                                        countermsj.incrementa(1);
+                                    }
+                                    System.out.println("aux "+aux);
+                                    for(int j=aux;j<1238;j++){
+                                        trama[j]=(byte)0;     
+                                    }
+                                }
+                                /*si es mas largo de 20 bytes*/
+                                else{
+                                   
+                                    int aux=38+countermsj.id;
+                                    for(int j=0;j<1238;j++){
+                                        trama[aux]=mensaje[j];
+                                        countermsj.incrementa(1);
+                                    }
+                                    System.out.println("esto es una bandera");
+                                }
+                                
+                               /*ultimo paso, crear checksum*/
+                                /*byte[] ck= new byte[50];
+                                for(int j=0;j<48;j++) {
+                                    ck[j]=trama[j];
+                                }
+                                System.out.println(" ");
+                                long checksum=Checksum.calculateChecksum(ck);
+                                System.out.println("checsam: "+ck);
+                                */
+                            }
+                            //Arrays.fill(a, (byte) 0xff);  
+                            ByteBuffer b = ByteBuffer.wrap(trama);
+                            
+        /*fin de construccion de trama*/ 	
 		};
-    //pcap.loop(1, jpacketHandler, "");
-    /******************************************************* 
-     * Fourth We send our packet off using open device 
-     *******************************************************/  
-    for(int zz=0;zz<10;zz++){
-        //if (pcap.sendPacket(b) != Pcap.OK) {  
-//        if(pcap.inject(b)<0){
+
+    /*contador del numero de veces que se mandara la trama*/
+
+    while(countermsj.id<tam){
             if (pcap.sendPacket(trama) != Pcap.OK) {  
           System.err.println(pcap.getErr());  
         }
@@ -297,15 +300,13 @@ public class Envia {
         try{
             Thread.sleep(500);
         }catch(InterruptedException e){}
-        pcap.loop(1, jpacketHandler, "");
-    }//for
-    /******************************************************** 
-     * Lastly we close 
-     ********************************************************/  
+        pcap.loop(1, jpacketHandler, "");    
+    }
+ 
     pcap.close();  
-    
+            
    }catch(Exception e){
        e.printStackTrace();
-   }//catch
+   }
   }  
 }  

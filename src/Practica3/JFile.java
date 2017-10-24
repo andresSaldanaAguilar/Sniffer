@@ -20,7 +20,8 @@ import javax.swing.filechooser.FileSystemView;
  */
 public class JFile {
 
-
+String pathO="";
+String pathD="";
 
  byte[] readFile() throws IOException{
     InputStream is = null;
@@ -36,6 +37,7 @@ public class JFile {
 			File selectedFile = jfc.getSelectedFile();
 			System.out.println(selectedFile.getAbsolutePath());
                         String path = selectedFile.getAbsolutePath();
+                        pathO = selectedFile.getName();
                         long tamanio = selectedFile.length();
                 try {
 
@@ -85,6 +87,7 @@ public class JFile {
 			File selectedFile = jfc.getSelectedFile();
 			System.out.println(selectedFile.getAbsolutePath());
                         String path = selectedFile.getAbsolutePath();
+                        pathD=selectedFile.getName();
                         long tamanio = selectedFile.length();
                 try {
 
@@ -111,17 +114,11 @@ public class JFile {
                 return null;
 }
 
-public static void main(String args[]) throws IOException{
-
-      
-      
-
+String getOriginPath(){
+   return pathO;
 }
- /*
-public static void main(String args[]) throws IOException{
-    JFile file=new JFile(); 
-    file.openFile();
+String getDestinyPath(){
+    return pathD;
 }
-*/
 
 }

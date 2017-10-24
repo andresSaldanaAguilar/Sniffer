@@ -31,7 +31,8 @@ public class Captura {
 	/**
 	 * Main startup method
 	 *
-	 * @param args
+	 * @param args0
+         * 
 	 *          ignored
 	 */
    private static String asString(final byte[] mac) {
@@ -68,7 +69,7 @@ public class Captura {
                 if (pcap == null) {
                   System.err.printf("Error while opening device for capture: "+ errbuf.toString());
                   return;
-                 }//if
+                }
                 } else if(opcion==0){
 		/***************************************************************************
 		 * First get a list of devices on this system
@@ -111,7 +112,7 @@ public class Captura {
                 /*"snaplen" is short for 'snapshot length', as it refers to the amount of actual data captured from each packet passing through the specified network interface.
                 64*1024 = 65536 bytes; campo len en Ethernet(16 bits) tam máx de trama */
 
-		int snaplen = 64 * 1024;           // Capture all packets, no trucation
+		int snaplen = 64*1024;           // Capture all packets, no trucation
 		int flags = Pcap.MODE_PROMISCUOUS; // capture all packets
 		int timeout = 10 * 1000;           // 10 seconds in millis
 
@@ -126,7 +127,7 @@ public class Captura {
                   
                        /********F I L T R O********/
             PcapBpfProgram filter = new PcapBpfProgram();
-            String expression =""; // "port 80";
+            String expression ="ether proto 0x1601"; // "port 80";
             int optimize = 0; // 1 means true, 0 means false
             int netmask = 0;
             int r2 = pcap.compile(filter, expression, optimize, netmask);
@@ -313,15 +314,21 @@ public class Captura {
                                 byte[] paqueteIP=new byte[50];
                                 int j=0,k=0;
                                 int tipo;
+                                StringBuilder sb = new StringBuilder();
+                                String mensaje="";
                                 tipo=packet.getUByte(12)<<8 | packet.getUByte(13);
-                                    try {
+                                    
                                         //TRAMA CHIDA
-                                        DataOutputStream dos= new DataOutputStream(new FileOutputStream("resultado.txt"));
+                                        
+                                        for(int i=19;i<packet.size();i++){
+                                            mensaje+=packet.getUTF8Char(i);
+                                        }
+                                            
+                                        System.out.println("EL mensajini es: "+mensaje);
+                                        
                                         
                                     
-                                    } catch (FileNotFoundException ex) {
-                                        Logger.getLogger(Captura.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
+                                    
                                     
                                     
                                     
@@ -385,6 +392,7 @@ public class Captura {
                                         else if((byte)packet.getUByte(23)==0x11){
                                             //encuentro la longitud real restando IHL - longitud
                                             int longitudReal=longitudRelativa-20;
+                                                    
                                             System.out.println("Longitud real: "+longitudReal);
                                             
                                             System.out.println("Es tipo UDP");
