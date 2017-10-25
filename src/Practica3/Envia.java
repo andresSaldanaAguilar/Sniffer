@@ -149,7 +149,7 @@ public class Envia {
             pcap.setFilter(filter);
             
     
-    byte[] trama = new byte[1247];
+    byte[] trama = new byte[1280];
    
     for(int k=0;k<MACo.length;k++){ //mc destino y origen
         trama[k] = (byte) 0xff;
@@ -215,15 +215,16 @@ public class Envia {
                                     }
                                 }
                                 /*si es mas largo de 20 bytes*/
-                                else{
-                                    int aux=38+countermsj.id;
+                                else{                                 
                                     for(int j=0;j<1238;j++){
-                                        trama[aux]=mensaje[j];
+                                        trama[38+countermsj.id]=mensaje[j];
                                         countermsj.incrementa(1);
                                     }
-                                    
+                                    System.out.println("esto es una bandera de no recursion");
+                                    System.out.println("indice del mensaje: "+countermsj.id);
                                 }
-    pcap.sendPacket(trama);                        
+                                System.out.println("");
+                                pcap.sendPacket(trama);                        
                                 
     /*********primer mensaje que se envia************/
     /*agregamos los datos (mensaje) a la trama*/
@@ -249,29 +250,33 @@ public class Envia {
                                 
                                 System.out.println("Tamaño del mensaje:" +mensaje.length);  
                                 //si el mensaje se manda en un solo paquete
-                                if(mensaje.length < 1200){
+                                if(mensaje.length-countermsj.id < 1200){
                                     //variable aux
+                                    System.out.println("esto es una bandera recursion, menor a 1200");
+                                    System.out.println("Restante: "+ (mensaje.length-countermsj.id));
                                     int aux=38;
+                                    int aux2=mensaje.length-countermsj.id;
                                     //lenamos con el tamaño del archivp
-                                    for(int j=0;j<mensaje.length;j++){
-                                        trama[38+j]=mensaje[j];
+                                    for(int j=0;j<aux2;j++){
+                                        trama[38+j]=mensaje[countermsj.id];
                                         aux++;
                                         countermsj.incrementa(1);
                                     }
-                                    System.out.println("aux "+aux);
                                     for(int j=aux;j<1238;j++){
                                         trama[j]=(byte)0;     
                                     }
+                                    System.out.println("Contador del programa: "+countermsj.id);
+                                    
                                 }
                                 /*si es mas largo de 20 bytes*/
                                 else{
-                                   
+                                    System.out.println("esto es una bandera recursion, mayor a 1200");
+                                    System.out.println("indice del mensaje: "+countermsj.id);
                                     int aux=38+countermsj.id;
                                     for(int j=0;j<1238;j++){
-                                        trama[aux]=mensaje[j];
+                                        trama[38+j]=mensaje[countermsj.id];
                                         countermsj.incrementa(1);
-                                    }
-                                    System.out.println("esto es una bandera");
+                                    }   
                                 }
                                 
                                /*ultimo paso, crear checksum*/
@@ -283,9 +288,10 @@ public class Envia {
                                 long checksum=Checksum.calculateChecksum(ck);
                                 System.out.println("checsam: "+ck);
                                 */
+                                
                             }
                             //Arrays.fill(a, (byte) 0xff);  
-                            ByteBuffer b = ByteBuffer.wrap(trama);
+                           
                             
         /*fin de construccion de trama*/ 	
 		};
@@ -293,15 +299,28 @@ public class Envia {
     /*contador del numero de veces que se mandara la trama*/
 
     while(countermsj.id<tam){
-            if (pcap.sendPacket(trama) != Pcap.OK) {  
+            if (pcap.sendPacket(trama) != Pcap.OK) {
           System.err.println(pcap.getErr());  
         }
             System.out.println("Envie un paquete******");
         try{
             Thread.sleep(500);
-        }catch(InterruptedException e){}
+        }catch(InterruptedException e){
+            System.out.println("Hubo un error.");
+        }
         pcap.loop(1, jpacketHandler, "");    
     }
+        //mandamos una trama mas, que sera la ultima
+        if (pcap.sendPacket(trama) != Pcap.OK) {
+          System.err.println(pcap.getErr());  
+        }
+            System.out.println("Envie un paquete******");
+        try{
+            Thread.sleep(500);
+        }catch(InterruptedException e){
+            System.out.println("Hubo un error.");
+        }
+        pcap.loop(1, jpacketHandler, ""); 
  
     pcap.close();  
             
