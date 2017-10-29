@@ -51,6 +51,7 @@ public class Captura {
   }
 
 	public static void main(String[] args) {
+            List<Byte> arrays = new ArrayList<Byte>();
             Pcap pcap=null;
                try{
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));   
@@ -137,7 +138,11 @@ public class Captura {
             pcap.setFilter(filter);
                 /****************/
             }//else if
-
+                
+            Counter mensaje=new Counter(); //concatenador del mensaje resultado
+            Counter contador=new Counter(1);
+            
+            
 		/***************************************************************************
 		 * Third we create a packet handler which will receive packets from the
 		 * libpcap loop.
@@ -145,7 +150,8 @@ public class Captura {
 		PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
 
 			public void nextPacket(PcapPacket packet, String user) {
-
+                                
+                                
 				System.out.printf("\n\nPaquete recibido el %s caplen=%-4d longitud=%-4d %s\n\n",
 				    new Date(packet.getCaptureHeader().timestampInMillis()),
 				    packet.getCaptureHeader().caplen(),  // Length actually captured
@@ -178,7 +184,7 @@ public class Captura {
                                         }
                                         for(int i=s2.length()-1;i>=0;i--){
                                             tipoTrama2=tipoTrama2+s2.charAt(i);
-                                        }
+                                    }
                                     
                                     
                                     /* LA TRAMA ES IEEE*/
@@ -307,142 +313,43 @@ public class Captura {
                                      }
                                 }
                                 }//la trama es tipo ethernet
-                                else if(longitud==5633){
-                                    System.out.println("-->Trama CHIDA :D");
-                                    byte checksum[]={(byte)packet.getUByte(24),(byte)packet.getUByte(25)};
+                                
+                                //validando que sea la trama personalizada y el destino apropiado
+                                else if(longitud==5633 && packet.getUByte(14)==2){ 
+                                System.out.println("-->Trama CHIDA :D");
+                                byte checksum[]={(byte)packet.getUByte(24),(byte)packet.getUByte(25)};
                                 
                                 byte[] paqueteIP=new byte[50];
                                 int j=0,k=0;
                                 int tipo;
                                 StringBuilder sb = new StringBuilder();
-                                String mensaje="";
+                                
                                 tipo=packet.getUByte(12)<<8 | packet.getUByte(13);
                                     
-                                        //TRAMA CHIDA
-                                        
-                                        for(int i=19;i<packet.size();i++){
-                                            mensaje+=packet.getUTF8Char(i);
+                                //TRAMA CHIDA
+                                byte[] mensaje= new byte[1200];
+                                if(contador.id !=1){ //descartamos la primer trama y los ceros
+                                        for(int i=0;i<1200;i++){
+                                            arrays.add((byte)packet.getUByte(i));
                                         }
-                                            
-                                        System.out.println("EL mensajini es: "+mensaje);
-                                        
-                                        
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    /*ahora checamos el valor del checksum de TCP o UDP*/
-                                    
-                                    //validamos el IHL del encabezado
-                                    
-                                    
-                                    //caso de valor de 20 bytes de ip (4500)
-                                    if((byte)packet.getUByte(14)==69){
-                                        //encuentro cual es la longitud
-                                        int numero=packet.getUByte(16);
-                                        int desplazado=numero <<8;
-                                        int numero2=packet.getUByte(17);
-                                        int longitudRelativa=desplazado+numero2;
-                                        
-                                        System.out.println("Longitud relativa: "+longitudRelativa);
-                                        
-                                        //TCP
-                                        if((byte)packet.getUByte(23)==0x06){
-                                            //encuentro la longitud real restando IHL - longitud
-                                            int longitudReal=longitudRelativa-20;
-                                            System.out.println("Longitud real: "+longitudReal);
-                                            
-                                            System.out.println("Es tipo tcp/ip");
-                                            
-                                            /* Ahora checaremos el checksum del TCP*/
-                                            
-                                            /*creando pseudoencabezado*/
-                                            
-                                            byte primeraMitad[]={(byte)packet.getUByte(26),(byte)packet.getUByte(27),(byte)packet.getUByte(28),(byte)packet.getUByte(29),
-                                                (byte)packet.getUByte(30),(byte)packet.getUByte(31),(byte)packet.getUByte(32),(byte)packet.getUByte(33),00000000,00000006,
-                                                (byte)packet.getUByte(16),(byte)(packet.getUByte(17)-20)};                                          
-                                            
-                                            k=0;
-                                            byte segundaMitad[]=new byte[longitudReal];
-                                            for(int i=34;i<34+longitudReal;i++){
-                                                    segundaMitad[k]=(byte)packet.getUByte(i);
-                                                    k++;
-                                                }
-                                            
-                                            //Uniendo ambas partes
-
-                                            int aLen = primeraMitad.length;
-                                            int bLen = segundaMitad.length;
-                                            byte[] c= new byte[aLen+bLen];
-                                            System.arraycopy(primeraMitad, 0, c, 0, aLen);
-                                            System.arraycopy(segundaMitad, 0, c, aLen, bLen);
-                                                
-                                            /*for(int i=0;i<c.length;i++){
-                                                System.out.printf("%02X ",c[i]);
-                                            }*/
-                                            
-                                            /*calculando checksum tcp*/
-                                                
-                                            long resultado = Checksum.calculateChecksum(c);
-                                            System.out.printf("Valor del checksum (TCP): %04X\n",resultado);
-                                        } 
-                                        
-                                        //UDP
-                                        else if((byte)packet.getUByte(23)==0x11){
-                                            //encuentro la longitud real restando IHL - longitud
-                                            int longitudReal=longitudRelativa-20;
-                                                    
-                                            System.out.println("Longitud real: "+longitudReal);
-                                            
-                                            System.out.println("Es tipo UDP");
-
-                                            
-                                            /* Ahora checaremos el checksum del UDP*/
-                                            
-                                            /*creando pseudoencabezado*/
-                                            
-                                            byte primeraMitad[]={(byte)packet.getUByte(26),(byte)packet.getUByte(27),(byte)packet.getUByte(28),(byte)packet.getUByte(29),
-                                                (byte)packet.getUByte(30),(byte)packet.getUByte(31),(byte)packet.getUByte(32),(byte)packet.getUByte(33),00000000,0x11,
-                                                (byte)packet.getUByte(16),(byte)(packet.getUByte(17)-20)};     
-                                            
-                                            k=0;
-                                            byte segundaMitad[]=new byte[longitudReal];
-                                            for(int i=34;i<34+longitudReal;i++){
-                                                    segundaMitad[k]=(byte)packet.getUByte(i);
-                                                    k++;
-                                                }
-
-                                            //Uniendo ambas partes
-
-                                            int aLen = primeraMitad.length;
-                                            int bLen = segundaMitad.length;
-                                            byte[] c= new byte[aLen+bLen];
-                                            System.arraycopy(primeraMitad, 0, c, 0, aLen);
-                                            System.arraycopy(segundaMitad, 0, c, aLen, bLen);
-                                            
-                                            /*for(int i=0;i<c.length;i++){
-                                                System.out.printf("%02X ",c[i]);
-                                            }*/
-                                                
-                                            /*calculando checksum UDP*/
-                                                
-                                            long resultadoUDP = Checksum.calculateChecksum(c);
-                                            System.out.printf("Valor del checksum (UDP): %04X\n",resultadoUDP);
-                                        }
-                                        
-                                        
-                                    }
-                                }   
-                                    else{
-                                        System.out.println("Proximamente mas validaciones XD");
                                     }
                                     
-                                
+                                    byte[] check= new byte[1268];
+                                    int aux=0;
+                                    for(int i=12;i<1280;i++){
+                                        check[aux]=(byte)packet.getUByte(i);
+                                        aux++;
+                                    }
+                                    long resultado = Checksum.calculateChecksum(check);
+                                    System.out.println("El checksum es:  "+resultado);
+
+                                    
+                                }contador.incrementa(1);
+                  
 			}       
 		};
-
-
+                
+                
 		/***************************************************************************
 		 * Fourth we enter the loop and tell it to capture 10 packets. The loop
 		 * method does a mapping of pcap.datalink() DLT value to JProtocol ID, which
@@ -457,6 +364,16 @@ public class Captura {
 		 * Last thing to do is close the pcap handle
 		 **************************************************************************/
 		pcap.close();
-                }catch(IOException e){e.printStackTrace();}
+                byte [] auxiliar=new byte[10000];
+                   for (int i = 0; i < 10; i++) {
+                       if(arrays.get(i)!=0)
+                       auxiliar[i]=arrays.get(i);
+                   }
+                
+                JFile jf=new JFile(); 
+                jf.writeFile(auxiliar);
+                
+                
+               }catch(IOException e){e.printStackTrace();}
 	}
 }

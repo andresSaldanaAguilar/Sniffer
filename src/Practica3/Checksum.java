@@ -62,6 +62,11 @@ public class Checksum {
       byte[] buf = {(byte) 0x45,(byte) 0x00,(byte) 0x00, (byte) 0x3c, (byte) 0x0a, (byte) 0x1c, (byte) 0x40, (byte) 0x00,(byte) 0xff, (byte)0x06, (byte)0x00, (byte) 0x00, (byte)0xa8, (byte)0xb0, (byte) 0x03, (byte) 0x19, (byte) 0xa8, (byte) 0xb0, (byte) 0x03, (byte) 0x6c};
       long resultado = Checksum.calculateChecksum(buf);
       System.out.printf("Valor del checksum: %02X\n",resultado);
+      
+      byte[] buf2 = {(byte) 0x45,(byte) 0x00,(byte) 0x00, (byte) 0x3c, (byte) 0x0a, (byte) 0x1c, (byte) 0x40, (byte) 0x00,(byte) 0xff, (byte)0x06, (byte)0x19, (byte) 0xBA, (byte)0xa8, (byte)0xb0, (byte) 0x03, (byte) 0x19, (byte) 0xa8, (byte) 0xb0, (byte) 0x03, (byte) 0x6c};
+      long resultado2 = Checksum.calculateChecksum(buf2);
+      System.out.printf("Valor del checksum: %02X\n",resultado2);
+      
   }//main
 
 }

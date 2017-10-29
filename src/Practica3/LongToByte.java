@@ -13,47 +13,54 @@ public class LongToByte {
     
 
 public static void main(String args[]){
-    long l1 = 60100;                
+    long l1 = 6100;                
     String cadena=Long.toBinaryString(l1);
-    System.out.println(cadena);
-    String str1="",str2="";
     
-    int tam=cadena.length();
+    String str1="",str2="",aux="";
     if(cadena.length()<16){
-        if(cadena.length()<8){
-            
-            str1+="00000000";
-            
-            for(int i=0;i<8-tam;i++){
-                str2+='0';
-            }        
-            for(int i=0; i<tam;i++){
-                str2+=cadena.charAt(i);
-            }   
+        for(int j=0;j<16-cadena.length();j++){
+            aux=aux+"0";
         }
-        else{
-            for(int i=0;i<8-tam;i++){
-                str1+='0';
-            }
-            int j=0;
-            for(int i=8-tam; i<8;i++){
-                str1+=cadena.charAt(j);
-                j++;
-            }
-            for(int i=8; i<16;i++){
-                str2+=cadena.charAt(j);
-                j++;
-            }
-        }
+            aux=aux+cadena;
+    }
+    System.out.println(aux);
+    
+//    int tam=cadena.length();
+//    if(cadena.length()<16){
+//        if(cadena.length()<8){
+//            
+//            str1+="00000000";
+//            
+//            for(int i=0;i<8-tam;i++){
+//                str2+='0';
+//            }        
+//            for(int i=0; i<tam;i++){
+//                str2+=cadena.charAt(i);
+//            }   
+//        }
+//        else{
+//            for(int i=0;i<8-tam;i++){
+//                str1+='0';
+//            }
+//            int j=0;
+//            for(int i=8-tam; i<8;i++){
+//                str1+=cadena.charAt(j);
+//                j++;
+//            }
+//            for(int i=8; i<16;i++){
+//                str2+=cadena.charAt(j);
+//                j++;
+//            }
+//        }
+//        
+//    } System.out.println(cadena);  
         
-    } System.out.println(cadena);  
-        
-    for(int i=16-cadena.length();i<8;i++){
-            str1+=cadena.charAt(i);
+    for(int i=0;i<8;i++){
+            str1+=aux.charAt(i);
         }System.out.print(str1);
         for(int i=8;i<16;i++){
-            str2+=cadena.charAt(i);
-        }System.out.println(str1);    
+            str2+=aux.charAt(i);
+        }System.out.println(str2);    
     
     System.out.println("long value: " + l1);                 // prints 10
     int n1=Integer.parseInt(str1,2);

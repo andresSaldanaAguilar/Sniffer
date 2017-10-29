@@ -25,9 +25,9 @@ String pathD="";
 
  byte[] readFile() throws IOException{
     InputStream is = null;
-    int i;
-    char c;
-    byte[] b; 
+    int i=0;
+
+    byte[] buf; 
       
         JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 		int returnValue = jfc.showOpenDialog(null);
@@ -39,25 +39,20 @@ String pathD="";
                         String path = selectedFile.getAbsolutePath();
                         pathO = selectedFile.getName();
                         long tamanio = selectedFile.length();
-                try {
-
+                try { 
                         // new input stream created
                         is = new FileInputStream(path);
-                        b= new byte[(int)tamanio];
-
-                        System.out.println("Characters printed:");
+                        buf= new byte[(int)tamanio];
                         long env=0;
                         // reads till the end of the stream
                         while(env <tamanio) {
-                            i = is.read(b); //copia al arreglo el contenido del archivo.
+                            i = is.read(buf); //copia al arreglo el contenido del archivo.
                             env++;
-                                    //is.read(b, offset, len);
-                                    //is.b[],off, len
                         }
-                        for (int j=0;j<b.length;j++){
-                            System.out.print((char)b[j]);
+                        for (int j=0;j<buf.length;j++){
+                            System.out.print((char)buf[j]);
                         }                       
-                        return b;
+                        return buf;
 
                     } catch(Exception e) {
 
@@ -73,13 +68,21 @@ String pathD="";
                 return null;
 }
  
- byte[] writeFile(int []b) throws IOException{
-    OutputStream os = null;
-    int i;
-    char c;
-     
-      
-        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+ byte[] writeFile(byte[] s) throws IOException{
+                         OutputStream dos = new FileOutputStream("resultado.pdf");
+                    try {                         
+                        dos.write(s,0,s.length); //copia al arreglo el contenido del archivo.
+                        dos.flush();
+                        dos.close();
+                    } catch(Exception e) {
+                         // if any I/O error occurs
+                         e.printStackTrace();
+                    }
+                return null;
+}
+
+void readPDF() throws FileNotFoundException, IOException{
+                JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 		int returnValue = jfc.showOpenDialog(null);
 		// int returnValue = jfc.showSaveDialog(null);
 
@@ -87,38 +90,49 @@ String pathD="";
 			File selectedFile = jfc.getSelectedFile();
 			System.out.println(selectedFile.getAbsolutePath());
                         String path = selectedFile.getAbsolutePath();
-                        pathD=selectedFile.getName();
-                        long tamanio = selectedFile.length();
-                try {
 
-                        // new input stream created
-                        os = new FileOutputStream(path);                                              
-                        //os.write(b); //copia al arreglo el contenido del archivo.
-                        
-                        for (int j=0;j<b.length;j++){
-                            System.out.print((char)b[j]);
-                        }                       
-                        //return b;
+        OutputStream oos = new FileOutputStream("test.pdf");
 
-                    } catch(Exception e) {
+        byte[] buf = new byte[8192];
 
-                         // if any I/O error occurs
-                         e.printStackTrace();
-                      } finally {
+        InputStream is = new FileInputStream(path);
 
-                         // releases system resources associated with this stream
-                         if(os!=null)
-                            os.close();
-                   }
-		}
-                return null;
-}
-
+        int c = 0;
+        while ((c = is.read(buf, 0, buf.length)) > 0) {
+            oos.write(buf, 0, c);
+            oos.flush();
+        }
+        oos.close();
+        System.out.println("stop");
+        is.close();
+                }
+} 
+ 
 String getOriginPath(){
-   return pathO;
+    String aux="";
+    int i=0;
+    while(pathO.charAt(i)!='.'){
+        aux=aux+pathO.charAt(i);
+        i++;
+    }
+    return aux;
 }
 String getDestinyPath(){
-    return pathD;
+    String aux="";
+    int i=0;
+    while(pathD.charAt(i)!='.'){
+        aux=aux+pathD.charAt(i);
+        i++;
+    }
+    return aux;
 }
 
+
+public static void main(String[] args) throws IOException{
+    JFile jf=new JFile();
+    //jf.readPDF();
+    byte[]result=jf.readFile();
+    jf.writeFile(result);
+    System.out.println(jf.getOriginPath());
+}
 }
