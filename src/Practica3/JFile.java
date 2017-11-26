@@ -127,7 +127,6 @@ String getDestinyPath(){
     return aux;
 }
 
-
 public static void main(String[] args) throws IOException{
     JFile jf=new JFile();
     //jf.readPDF();

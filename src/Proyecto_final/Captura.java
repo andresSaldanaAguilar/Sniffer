@@ -6,6 +6,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.io.*;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileSystemView;
 
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapAddr;
@@ -21,9 +26,18 @@ import org.jnetpcap.packet.Payload;
 import org.jnetpcap.protocol.network.Arp;
 import org.jnetpcap.protocol.lan.IEEE802dot2;
 import org.jnetpcap.protocol.lan.IEEE802dot3;
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jnetpcap.Pcap;
+import org.jnetpcap.PcapDumper;
+import org.jnetpcap.PcapHandler;
+import org.jnetpcap.PcapIf;
 
 
-public class Captura {
+public class Captura extends Thread{
 
 	/**
 	 * Main startup method
@@ -31,7 +45,9 @@ public class Captura {
 	 * @param args
 	 *          ignored
 	 */
-   private static String asString(final byte[] mac) {
+    int modo,interfaz;
+    
+    private static String asString(final byte[] mac) {
     final StringBuilder buf = new StringBuilder();
     for (byte b : mac) {
       if (buf.length() != 0) {
@@ -45,22 +61,47 @@ public class Captura {
 
     return buf.toString();
   }
-
-	public static void main(String[] args) {
-            Pcap pcap=null;
+   
+    void Captura(){      
+           Pcap pcap=null;
                try{
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));   
 		List<PcapIf> alldevs = new ArrayList<PcapIf>(); // Will be filled with NICs
 		StringBuilder errbuf = new StringBuilder(); // For any error msgs
-                System.out.println("[0]-->Realizar captura de paquetes al vuelo");
-                System.out.println("[1]-->Cargar traza de captura desde archivo");
-                System.out.print("\nElige una de las opciones:");
-                int opcion = Integer.parseInt(br.readLine());
+                int opcion=Integer.parseInt(JOptionPane.showInputDialog("Ingrese su opcion:\n[0] captura al vuelo \n[1]captura desde archivo"));
+                modo=opcion;
                 if (opcion==1){
-                    
-                    /////////////////////////lee archivo//////////////////////////
-                //String fname = "archivo.pcap";
-                String fname = "paquetes3.pcap";
+                } else if(opcion==0){
+		interfaz=2;
+                }
+                }catch(Exception e){
+                        
+                }          
+    }
+      
+    public void run(){
+                  Pcap pcap=null;
+               try{
+                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));   
+		List<PcapIf> alldevs = new ArrayList<PcapIf>(); // Will be filled with NICs
+		StringBuilder errbuf = new StringBuilder(); // For any error msgs
+                //System.out.println("[0]-->Realizar captura de paquetes al vuelo");
+                //System.out.println("[1]-->Cargar traza de captura desde archivo");
+                //System.out.print("\nElige una de las opciones:");
+                //preguntamos por forma de captura
+                //int opcion=Integer.parseInt(JOptionPane.showInputDialog("Ingrese su opcion:\n[0] captura al vuelo \n[1]captura desde archivo"));
+                int opcion=modo;
+                //int opcion = Integer.parseInt(br.readLine());
+                if (opcion==1){
+                /////////////////////////lee archivo//////////////////////////
+                JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		int returnValue = jfc.showOpenDialog(null);
+
+		File selectedFile = jfc.getSelectedFile();
+		System.out.println(selectedFile.getAbsolutePath());
+                String path = selectedFile.getAbsolutePath();
+                        
+                String fname = path;
                 pcap = Pcap.openOffline(fname, errbuf);
                 if (pcap == null) {
                   System.err.printf("Error while opening device for capture: "+ errbuf.toString());
@@ -78,7 +119,7 @@ public class Captura {
 		}
 
 		System.out.println("Network devices found:");
-
+                String menuop="";
 		int i = 0;
 		for (PcapIf device : alldevs) {
 			String description =
@@ -86,16 +127,19 @@ public class Captura {
 			        : "No description available";
                         final byte[] mac = device.getHardwareAddress();
 			String dir_mac = (mac==null)?"No tiene direccion MAC":asString(mac);
+                        menuop+="#"+i+": "+device.getName()+" ["+description+"] MAC:["+dir_mac+"]\n";
+                        i++;
                         System.out.printf("#%d: %s [%s] MAC:[%s]\n", i++, device.getName(), description, dir_mac);
                         List<PcapAddr> direcciones = device.getAddresses();
                         for(PcapAddr direccion:direcciones){
+                            menuop+=direccion.getAddr().toString()+"\n";
                             System.out.println(direccion.getAddr().toString());
-                        }//foreach
-
-		}//for
+                        }
+		}
                 
-                System.out.print("\nEscribe el número de interfaz a utilizar:");
-                int interfaz = Integer.parseInt(br.readLine());
+                //System.out.print("\nEscribe el número de interfaz a utilizar:");
+                //preguntamos por opcion de dispositivo
+                //int interfaz = Integer.parseInt(JOptionPane.showInputDialog("Ingrese numero de interfaz a utlizar:\n"+menuop+"\n"));
 		PcapIf device = alldevs.get(interfaz); // We know we have atleast 1 device
 		System.out
 		    .printf("\nChoosing '%s' on your behalf:\n",
@@ -107,22 +151,28 @@ public class Captura {
 		 **************************************************************************/
                 /*"snaplen" is short for 'snapshot length', as it refers to the amount of actual data captured from each packet passing through the specified network interface.
                 64*1024 = 65536 bytes; campo len en Ethernet(16 bits) tam máx de trama */
-
+                
 		int snaplen = 64 * 1024;           // Capture all packets, no trucation
 		int flags = Pcap.MODE_PROMISCUOUS; // capture all packets
 		int timeout = 10 * 1000;           // 10 seconds in millis
 
-                
+                //snaplen=tamaño del paquete, timeout=tiempo de captura
                 pcap = Pcap.openLive(device.getName(), snaplen, flags, timeout, errbuf);
-
 		if (pcap == null) {
 			System.err.printf("Error while opening device for capture: "
 			    + errbuf.toString());
 			return;
 		}//if
                   
+                
+                
+                
                        /********F I L T R O********/
             PcapBpfProgram filter = new PcapBpfProgram();
+
+                    
+            //String filtro = (String) JOptionPane.showInputDialog(frame, "Selecciona un filtro", "Input",JOptionPane.QUESTION_MESSAGE, null, options,options[1]);
+            
             String expression =""; // "port 80";
             int optimize = 0; // 1 means true, 0 means false
             int netmask = 0;
@@ -133,15 +183,14 @@ public class Captura {
             pcap.setFilter(filter);
                 /****************/
             }//else if
+                
 
-		/***************************************************************************
-		 * Third we create a packet handler which will receive packets from the
-		 * libpcap loop.
-		 **********************************************************************/
-		PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
-
+                
+                
+                PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
+                    
 			public void nextPacket(PcapPacket packet, String user) {
-
+                                                      
 				System.out.printf("\n\nPaquete recibido el %s caplen=%-4d longitud=%-4d %s\n\n",
 				    new Date(packet.getCaptureHeader().timestampInMillis()),
 				    packet.getCaptureHeader().caplen(),  // Length actually captured
@@ -451,12 +500,14 @@ public class Captura {
 		 * the loop method exists that allows the programmer to sepecify exactly
 		 * which protocol ID to use as the data link type for this pcap interface.
 		 **************************************************************************/
-		pcap.loop(-1, jpacketHandler, " ");
+		pcap.loop(10, jpacketHandler, " ");
 
 		/***************************************************************************
 		 * Last thing to do is close the pcap handle
 		 **************************************************************************/
 		pcap.close();
                 }catch(IOException e){e.printStackTrace();}
-	}
+	
+  }
+
 }
