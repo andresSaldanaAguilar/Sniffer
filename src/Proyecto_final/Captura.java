@@ -45,7 +45,8 @@ public class Captura extends Thread{
 	 * @param args
 	 *          ignored
 	 */
-    int modo,interfaz;
+    int modo,interfaz,tiempo,nopaquetes;
+    String filtro;
     
     private static String asString(final byte[] mac) {
     final StringBuilder buf = new StringBuilder();
@@ -71,11 +72,24 @@ public class Captura extends Thread{
                 int opcion=Integer.parseInt(JOptionPane.showInputDialog("Ingrese su opcion:\n[0] captura al vuelo \n[1]captura desde archivo"));
                 modo=opcion;
                 if (opcion==1){
-                } else if(opcion==0){
-		interfaz=2;
+                }else if(opcion==0){
+                    int intfz=Integer.parseInt(JOptionPane.showInputDialog(
+                            "Network devices found:\n"
+                            + "#0: \\Device\\NPF_{3022B188-6149-4CCE-B063-F3B8A98B060F} [Qualcomm Atheros Ar81xx series PCI-E Ethernet Controller] MAC:[F4:6D:04:4B:0C:62]\n"
+                            +"[INET4:192.168.0.13]\n"
+                            +"[INET6:-2.-128.0.0]\n"
+                            +"#1: \\Device\\NPF_{400F9078-1BF9-4317-B579-639CE091A5B0} [Oracle] MAC:[0A:00:27:00:00:08]\n"
+                            +"[INET4:192.168.56.1]\n"
+                            +"[INET6:-2.-128.0.0]\n"
+                            +"#2: \\Device\\NPF_{3C40B494-F281-4AB9-ACCE-B4644E09CF79} [Microsoft] MAC:[E0:B9:A5:57:5C:81]\n"
+                            +"[INET4:192.168.0.5]\n"
+                            +"[INET6:-2.-128.0.0]\n"
+                            +"#3: \\Device\\NPF_{1B804EB3-6188-4871-9DED-58FE83094FDE} [Microsoft] MAC:[E0:B9:A5:57:5C:81]\n"
+                            +"[INET6:-2.-128.0.0]"
+                    ));
+                    interfaz=intfz;
                 }
-                }catch(Exception e){
-                        
+                }catch(Exception e){           
                 }          
     }
       
@@ -118,7 +132,7 @@ public class Captura extends Thread{
 			return;
 		}
 
-		System.out.println("Network devices found:");
+		//System.out.println("Network devices found:");
                 String menuop="";
 		int i = 0;
 		for (PcapIf device : alldevs) {
@@ -129,11 +143,11 @@ public class Captura extends Thread{
 			String dir_mac = (mac==null)?"No tiene direccion MAC":asString(mac);
                         menuop+="#"+i+": "+device.getName()+" ["+description+"] MAC:["+dir_mac+"]\n";
                         i++;
-                        System.out.printf("#%d: %s [%s] MAC:[%s]\n", i++, device.getName(), description, dir_mac);
+                        //System.out.printf("#%d: %s [%s] MAC:[%s]\n", i++, device.getName(), description, dir_mac);
                         List<PcapAddr> direcciones = device.getAddresses();
                         for(PcapAddr direccion:direcciones){
                             menuop+=direccion.getAddr().toString()+"\n";
-                            System.out.println(direccion.getAddr().toString());
+                            //System.out.println(direccion.getAddr().toString());
                         }
 		}
                 
@@ -152,20 +166,17 @@ public class Captura extends Thread{
                 /*"snaplen" is short for 'snapshot length', as it refers to the amount of actual data captured from each packet passing through the specified network interface.
                 64*1024 = 65536 bytes; campo len en Ethernet(16 bits) tam máx de trama */
                 
-		int snaplen = 64 * 1024;           // Capture all packets, no trucation
+               int snaplen = 64 * 1024;           // Capture all packets, no trucation
 		int flags = Pcap.MODE_PROMISCUOUS; // capture all packets
-		int timeout = 10 * 1000;           // 10 seconds in millis
-
+		int timeout = tiempo * 1000;           // 10 seconds in millis
+                
                 //snaplen=tamaño del paquete, timeout=tiempo de captura
                 pcap = Pcap.openLive(device.getName(), snaplen, flags, timeout, errbuf);
 		if (pcap == null) {
 			System.err.printf("Error while opening device for capture: "
 			    + errbuf.toString());
 			return;
-		}//if
-                  
-                
-                
+		}
                 
                        /********F I L T R O********/
             PcapBpfProgram filter = new PcapBpfProgram();
@@ -173,7 +184,7 @@ public class Captura extends Thread{
                     
             //String filtro = (String) JOptionPane.showInputDialog(frame, "Selecciona un filtro", "Input",JOptionPane.QUESTION_MESSAGE, null, options,options[1]);
             
-            String expression =""; // "port 80";
+            String expression =filtro; // "port 80";
             int optimize = 0; // 1 means true, 0 means false
             int netmask = 0;
             int r2 = pcap.compile(filter, expression, optimize, netmask);
@@ -500,8 +511,7 @@ public class Captura extends Thread{
 		 * the loop method exists that allows the programmer to sepecify exactly
 		 * which protocol ID to use as the data link type for this pcap interface.
 		 **************************************************************************/
-		pcap.loop(10, jpacketHandler, " ");
-
+		pcap.loop(nopaquetes, jpacketHandler, " ");
 		/***************************************************************************
 		 * Last thing to do is close the pcap handle
 		 **************************************************************************/

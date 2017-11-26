@@ -21,6 +21,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import org.jnetpcap.Pcap;
+import org.jnetpcap.PcapBpfProgram;
 import org.jnetpcap.PcapDumper;
 import org.jnetpcap.PcapHandler;
 import org.jnetpcap.PcapIf;
@@ -40,7 +41,8 @@ import org.jnetpcap.PcapIf;
 @SuppressWarnings("deprecation")
 public class PcapDumperExample extends Thread{
     
-    int interfaz;
+    int interfaz,tiempo,nopaquetes;
+    String filtro;
   
     @SuppressWarnings("deprecation")
     public void run(){
@@ -63,13 +65,26 @@ public class PcapDumperExample extends Thread{
 		 **************************************************************************/
 		int snaplen = 64 * 1024; // Capture all packets, no trucation
 		int flags = Pcap.MODE_PROMISCUOUS; // capture all packets
-		int timeout = 10 * 1000; // 10 seconds in millis
+		int timeout = tiempo * 1000; // 10 seconds in millis
 		Pcap pcap = Pcap.openLive(device.getName(), snaplen, flags, timeout, errbuf);
 		if (pcap == null) {
 			System.err.printf("Error while opening device for capture: " + errbuf.toString());
 			return;
 		}
+                /********F I L T R O********/
+                PcapBpfProgram filter = new PcapBpfProgram();
 
+
+                //String filtro = (String) JOptionPane.showInputDialog(frame, "Selecciona un filtro", "Input",JOptionPane.QUESTION_MESSAGE, null, options,options[1]);
+
+                String expression =filtro; // "port 80";
+                int optimize = 0; // 1 means true, 0 means false
+                int netmask = 0;
+                int r2 = pcap.compile(filter, expression, optimize, netmask);
+                if (r2 != Pcap.OK) {
+                    System.out.println("Filter error: " + pcap.getErr());
+                }//if
+                pcap.setFilter(filter);
 		/***************************************************************************
 		 * Third we create a PcapDumper and associate it with the pcap capture
 		 ***************************************************************************/
@@ -92,7 +107,7 @@ public class PcapDumperExample extends Thread{
                  * Fifth we enter the loop and tell it to capture 10 packets. We pass
                  * in the dumper created in step 3
                  **************************************************************************/
-                pcap.loop(10, dumpHandler, dumper);
+                pcap.loop(nopaquetes, dumpHandler, dumper);
 
                 File file = new File(ofile);
                 System.out.printf("%s file has %d bytes in it!\n", ofile, file.length());
